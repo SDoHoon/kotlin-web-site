@@ -59,60 +59,61 @@ def generate_pdf(build_mode: bool, pages, toc):
 def get_pdf_content(build_mode: bool, pages: MyFlatPages, toc: Dict) -> str:
     content = []
     for toc_section in toc['content']:
-        section = {
-            'id': toc_section['title'].replace(' ', '_'),
-            'title': toc_section['title'],
-            'content': []
-        }
-        for reference in toc_section['content']:
-            url = reference['url']
-            if url.startswith('/'):
-                url = url[1:]
-            if url.endswith('.html'):
-                url = url[:-5]
+        if toc_section['title'] != 'Overview':
+            section = {
+                'id': toc_section['title'].replace(' ', '_'),
+                'title': toc_section['title'],
+                'content': []
+            }
+            for reference in toc_section['content']:
+                url = reference['url']
+                if url.startswith('/'):
+                    url = url[1:]
+                if url.endswith('.html'):
+                    url = url[:-5]
 
-            if url == "docs/reference/grammar":
-                page_html = render_template('pages/grammar.html', kotlinGrammar=get_grammar(build_mode)).replace("<br>", "<br/>")
-                document = BeautifulSoup(page_html, 'html.parser')
-                document = document.find("div", {"class": "grammar"})
-                page_id = "grammar"
-                title = "Grammar"
-            else:
-                page = pages.get(url)
-                if page is None:
-                    continue
-                title = page.meta['title']
-                document = BeautifulSoup(page.html, 'html.parser')
-                page_id = page.path.split('/')[-1]
-
-            for element in document.find_all():
-                if 'id' in element.attrs:
-                    element.attrs['id'] = page_id + '_' + element.attrs['id']
-                if element.name == "a":
-                    if 'href' not in element.attrs:
+                if url == "docs/reference/grammar":
+                    page_html = render_template('pages/grammar.html', kotlinGrammar=get_grammar(build_mode)).replace("<br>", "<br/>")
+                    document = BeautifulSoup(page_html, 'html.parser')
+                    document = document.find("div", {"class": "grammar"})
+                    page_id = "grammar"
+                    title = "Grammar"
+                else:
+                    page = pages.get(url)
+                    if page is None:
                         continue
-                    href = element.attrs['href']
-                    url = urlparse(href)
-                    if url.scheme == "":
-                        if href.startswith('#'):
-                            new_href = page_id + '_' + href[1:]
-                        else:
-                            url_path = url.path.split("/")[-1]
-                            url_path = url_path[:-5] if url_path.endswith(".html") else url_path
-                            new_href = url_path + ('_' + url.fragment if url.fragment != "" else "")
-                        element.attrs['href'] = "#" + new_href
+                    title = page.meta['title']
+                    document = BeautifulSoup(page.html, 'html.parser')
+                    page_id = page.path.split('/')[-1]
 
-                header_regex = re.compile('^h(\d)$')
-                if header_regex.match(element.name):
-                    level = int(header_regex.match(element.name).group(1)) + 1
-                    element.name = 'h' + str(level)
+                for element in document.find_all():
+                    if 'id' in element.attrs:
+                        element.attrs['id'] = page_id + '_' + element.attrs['id']
+                    if element.name == "a":
+                        if 'href' not in element.attrs:
+                            continue
+                        href = element.attrs['href']
+                        url = urlparse(href)
+                        if url.scheme == "":
+                            if href.startswith('#'):
+                                new_href = page_id + '_' + href[1:]
+                            else:
+                                url_path = url.path.split("/")[-1]
+                                url_path = url_path[:-5] if url_path.endswith(".html") else url_path
+                                new_href = url_path + ('_' + url.fragment if url.fragment != "" else "")
+                            element.attrs['href'] = "#" + new_href
 
-            section['content'].append({
-                'id': page_id,
-                'title': title,
-                'content': document.decode()
-            })
-        content.append(section)
+                    header_regex = re.compile('^h(\d)$')
+                    if header_regex.match(element.name):
+                        level = int(header_regex.match(element.name).group(1)) + 1
+                        element.name = 'h' + str(level)
+
+                section['content'].append({
+                    'id': page_id,
+                    'title': title,
+                    'content': document.decode()
+                })
+            content.append(section)
     drive, root_folder_path_rest = path.splitdrive(root_folder_path)
     page_html = render_template('pdf.html', content=content, root_folder=(drive + root_folder_path_rest)
                                 .replace('\\', '/'))
