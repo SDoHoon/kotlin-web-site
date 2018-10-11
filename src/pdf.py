@@ -24,6 +24,7 @@ PDF_CONFIG = {
     'footer-center': '[page]',
     'footer-font-size': '9',
     'footer-spacing': '7',
+    'dpi': '96',
     'enable-smart-shrinking': '',
     'zoom': '0.9'
 }

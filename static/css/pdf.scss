@@ -2,5 +2,16 @@
 @import "com/page-content/page-content";
 
 body {
-    letter-spacing: 1px;
+  font-weight: normal;
+  .keyword {
+    margin-left: 1px;
+    margin-right: 1px;
+  }
+  p {
+    margin-left: 1px;
+    letter-spacing: 0.4mm !important;
+    margin-right: 1px;
+    text-align: justify;
+    font-kerning: normal;
+  }
 }
